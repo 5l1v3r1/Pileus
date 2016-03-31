@@ -1,8 +1,17 @@
 #!/usr/bin/env python
 
+import sys
 import time
 import requests
 import threading
+
+# Checks to see if the URL found contains 'hi there', which is the testing 
+# identifier. If it does, write to a file so it can be processed by something else
+def checker(r, url):
+    if 'hi there' in r.text:
+        print "[+] Match Found!"
+        f = open("found_"+url.strip(), 'w')
+        f.write(r.text)
 
 def worker(url):
     try:
@@ -10,6 +19,10 @@ def worker(url):
         if r.status_code == 200:
             print "ok! -> ", url, r.status_code
             list_of_oks.append(url)
+
+            # starts a thread to check the found page for our identifier
+            t = threading.Thread(target=checker, args=(r,url))
+            t.start()
         else:
             print "bad", url, r.status_code
     except requests.exceptions.RequestException:
@@ -17,7 +30,7 @@ def worker(url):
     
 
 if __name__ == '__main__':
-    list_of_oks = []
+    list_of_oks = [] # wow this needs a better name. 
     # _s has the wordlist start at 's'
     with open('_s') as f:
         urls = f.readlines()
