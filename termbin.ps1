@@ -1,4 +1,5 @@
 # writes to termbin for us so we don't need to install netcat everywhere
+# CREDIT: This code was modified from: https://gist.github.com/jstangroome/9adaa87a845e5be906c8/
 
 function Send-NetworkData ($data) {
     begin {
