@@ -25,16 +25,22 @@ print "[+] Done Gathering Repositories"
 print "[+] Searching Repositories for API Keys"
 
 keys = []
+gitkey = ""
+
+#Get Github API key from file
+with open("github_key",'r') as GIT:
+	gitkey = GIT.readline()
+	gitkey = gitkey.rstrip('\n')
+	gitkey = "token " + gitkey
+
 for i in range(0, len(repos)):
-	#Change auth token in header of request
-	r = requests.get("https://api.github.com/search/code?q=soundcloud_client_id+in:file+repo:" + str(repos[i]), headers={"Accept":"application/vnd.github.v3.text-match+json", "Authorization":"token CHANGEME"})
+	r = requests.get("https://api.github.com/search/code?q=soundcloud_client_id+in:file+repo:" + str(repos[i]), headers={"Accept":"application/vnd.github.v3.text-match+json", "Authorization":gitkey})
 	webJson = r.json()
 
 	try:
 		containsAPI = webJson['items'][0]['text_matches'][0]['fragment']
 	except Exception as e:
 		pass
-
 
 	s = re.compile("([a-z]|[0-9]){32}")
 	match = s.search(containsAPI)
@@ -43,8 +49,9 @@ for i in range(0, len(repos)):
 		keys.append(containsAPI[match.start():match.end()])
 		print "[*] Key Found"
 	
-
 keys = list(set(keys))
+print "[*] Check keys.txt for list of keys"
+
 with open("keys.txt", 'w+') as KEYS:
 	for item in keys:
 		KEYS.write(item + '\n')
