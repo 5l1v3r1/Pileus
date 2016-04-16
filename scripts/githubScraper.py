@@ -2,13 +2,12 @@
 
 import requests
 import re
-import json
 from time import sleep
 
 repos = []
 print "[+] Gathering Repositories"
 for i in range(1,100):
-	r = requests.get("https://github.com/search?o=desc\&p=" + str(i) + "\&q=soundcloud_client_id\&ref=simplesearch\&s=indexed\&type=Code")
+	r = requests.get("https://github.com/search?o=desc\&p=" + str(i) + "\&q=soundcloud_client_id\&ref=simplesearch\&s=indexed\&type=code")
 
 	#Regex for isolating user/repo from the html
 	s = re.compile("[/]\w*[/]\w*/blob/")
