@@ -24,7 +24,7 @@ function find_string ($string){
 	$files = create_json $tmp_json, $file1
 	$files = create_json $files, $file2
 	write-host "[+] json object: "
-	write-host $files
+	#write-host $files
 	
 	return $files
 }
