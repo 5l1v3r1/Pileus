@@ -27,7 +27,12 @@ function Create-AesManagedObject($key, $IV) {
 
 function Create-AesKey() {
     $aesManaged = Create-AesManagedObject
-    $aesManaged.GenerateKey()
+	
+	$enc = [system.Text.Encoding]::UTF8
+	$encryption_key = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAC" #example key 32 chars long
+	$byte_key = $enc.GetBytes($encryption_key)
+	$aesManaged.Key = $byte_key
+
     [System.Convert]::ToBase64String($aesManaged.Key)
 }
 
@@ -51,8 +56,12 @@ function Decrypt-String($key, $encryptedStringWithIV) {
     [System.Text.Encoding]::UTF8.GetString($unencryptedData).Trim([char]0)
 }
 
-$key = Create-AesKey
-$key
+$key = Create-AesKey #"magical" #Create-AesKey
+
+write-host $key
 $unencryptedString = "blahblahblah"
 $encryptedString = Encrypt-String $key $unencryptedString
 $backToPlainText = Decrypt-String $key $encryptedString
+
+write-host "[+] encrypted string: $encryptedString"
+write-host "[+] backtoplain: $backToPlainText"
