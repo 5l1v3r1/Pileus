@@ -19,6 +19,9 @@ def decrypt(msg):
 
 if __name__ == '__main__':
 
+	if len(sys.argv) != 2:
+		print "Args: -[ed] encrypt or decrypt"
+		sys.exit(1)
 	if sys.argv[1] == '-e':
 		msg = raw_input("What would you like to encrypt?(Plain text): ")
 		print encrypt(msg)
