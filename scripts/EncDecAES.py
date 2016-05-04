@@ -2,14 +2,8 @@ from Crypto.Cipher import AES
 import base64
 import sys
 
-__ENC_KEY__ = "CA7BB2E586B2297911228D570632B838"
-__IV__ = "DADE575D41C4EDAF"
-
-#ENC
-#D15FAD6776E28F09E0381A28854C02CA
-
-#IV
-#E55798C7B869C6E2
+__ENC_KEY__ = ""
+__IV__ = ""
 
 def pad(msg):
 	return msg + str((16 - (len(msg) % 16)) * '\0')
